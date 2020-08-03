@@ -1,53 +1,69 @@
 package cache
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestCache_Insert(t *testing.T) {
 	type args struct {
 		key   string
-		value interface{}
+		value string
 	}
 	tests := []struct {
 		name string
-		c    *Cache
-		args args
+		args []args
+		want []string
 	}{
 		{
-			name: "Test run",
-			c:    &Cache{},
-			args: args{},
+			name: "Insert when empty",
+			args: []args{args{
+				key:   "key1",
+				value: "val1",
+			}},
+			want: []string{"val1"},
+		},
+		{
+			name: "Insert when non empty - expect append",
+			args: []args{args{
+				key:   "key1",
+				value: "val1",
+			},
+				{
+					key:   "key1",
+					value: "val2",
+				}},
+			want: []string{"val1", "val2"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Cache{}
-			panic("oops")
-			c.Insert(tt.args.key, tt.args.value)
+			c := NewCache()
+			for _, arg := range tt.args {
+				c.Insert(arg.key, arg.value)
+			}
+			require.Equal(t, tt.want, c.Get(tt.args[0].key))
 		})
 	}
 }
 
-func TestCache_Get(t *testing.T) {
-	type args struct {
-		key string
-	}
-	tests := []struct {
-		name string
-		c    *Cache
-		args args
-		want interface{}
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Cache{}
-			if got := c.Get(tt.args.key); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Cache.Get() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+// func TestCache_Get(t *testing.T) {
+// 	type args struct {
+// 		key string
+// 	}
+// 	tests := []struct {
+// 		name string
+// 		c    *Cache
+// 		args args
+// 		want []string{}
+// 	}{}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			c :=
+// 			if got := c.Get(tt.args.key); !reflect.DeepEqual(got, tt.want) {
+// 				t.Errorf("Cache.Get() = %v, want %v", got, tt.want)
+// 			}
+// 		})
+// 	}
+// }

@@ -1,0 +1,1 @@
+Strings only since interfaces and slices are a pain

@@ -1,4 +1,4 @@
 .PHONY: test
 
 test:
-  go list (./...) | xargs go test
+	@go test -cover $(shell go list ./...)
