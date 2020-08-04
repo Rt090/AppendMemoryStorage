@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -67,3 +68,29 @@ func TestCache_Insert(t *testing.T) {
 // 		})
 // 	}
 // }
+
+func TestCache_Stats(t *testing.T) {
+	type fields struct {
+		buckets    []*bucket
+		RWMutex    sync.RWMutex
+		bucketSize uint32
+		entries    uint32
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Cache{
+				buckets:    tt.fields.buckets,
+				RWMutex:    tt.fields.RWMutex,
+				bucketSize: tt.fields.bucketSize,
+				entries:    tt.fields.entries,
+			}
+			c.Stats()
+		})
+	}
+}

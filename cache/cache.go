@@ -1,12 +1,14 @@
 package cache
 
 import (
+	"fmt"
 	"hash/fnv"
 	"sync"
 )
 
 const (
 	bucketInitial = 16
+	mapAlloc      = 1024
 )
 
 type bucket struct {
@@ -18,10 +20,11 @@ type Cache struct {
 	buckets []*bucket
 	sync.RWMutex
 	bucketSize uint32
+	entries    uint32
 }
 
 func newBucket() *bucket {
-	return &bucket{m: make(map[string][]string, bucketInitial)}
+	return &bucket{m: make(map[string][]string, mapAlloc)}
 }
 
 func NewCache() *Cache {
@@ -46,7 +49,7 @@ func (c *Cache) Insert(key string, value string) {
 	// don't need to reenter in the map since the reference should not change
 }
 
-func (c *Cache) Get(key string) interface{} {
+func (c *Cache) Get(key string) []string {
 	bucket := c.bucketForKey(key)
 	return bucket.m[key]
 }
@@ -60,4 +63,50 @@ func (c *Cache) bucketForKey(key string) *bucket {
 	m := c.buckets[bucket]
 	c.RUnlock()
 	return m
+}
+
+func (c *Cache) rebalance() {
+	//stop the world and move the keys
+}
+
+// finish doing the stats
+func (c *Cache) Stats() {
+	c.RLock()
+	bucketLen := len(c.buckets) // number of buckets
+	mostMapKeys := 0
+	mostValuesOneKey := 0
+	averageValues := 0
+	totalValues := 0
+	totalKeys := 0
+	averageKeys := 0
+
+	for _, bucket := range c.buckets {
+		bucket.RLock()
+		curKeys := len(bucket.m)
+		for _, val := range bucket.m {
+			valLen := len(val)
+			if valLen > mostValuesOneKey {
+				mostValuesOneKey = valLen
+			}
+			averageValues += valLen
+		}
+		bucket.RUnlock()
+		if curKeys > mostMapKeys {
+			mostMapKeys = curKeys
+		}
+		averageKeys += curKeys
+	}
+	c.RUnlock()
+	totalKeys = averageKeys
+	totalValues += averageValues
+	averageValues /= totalKeys
+	averageKeys /= bucketLen
+
+	fmt.Println(fmt.Sprintf("Total Keys: %d", totalKeys))
+	fmt.Println(fmt.Sprintf("Total Values: %d", totalValues))
+	fmt.Println(fmt.Sprintf("Bucket Count: %d", bucketLen))
+	fmt.Println(fmt.Sprintf("Average Values per key: %d", averageValues))
+	fmt.Println(fmt.Sprintf("Average Keys per map: %d", averageKeys))
+	fmt.Println(fmt.Sprintf("Most Keys 1 map: %d", mostMapKeys))
+	fmt.Println(fmt.Sprintf("Most Vals 1 key: %d", mostValuesOneKey))
 }
